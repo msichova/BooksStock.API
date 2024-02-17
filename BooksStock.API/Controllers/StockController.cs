@@ -161,6 +161,31 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        //returns list of books AT the REQUESTED Page where Title,Author, Language or one of item from array of Genres EQUALS to search term
+        [HttpGet, Route("books-equals-coondition-page")]
+        public async Task<ActionResult<List<BookProduct>>> GetPerPageBookEquals([Required] string term, [FromQuery]PageModel pageModel)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksEqualsConditionAsync(term);
+                if(books is null || books.Count == 0 )
+                {
+                    return NotFound("There no data in Collection that equals to: '" + term + "'");
+                }
+
+                List<BookProduct> booksOnReturn = ContentOnPage(books, pageModel);
+
+                return booksOnReturn is null || booksOnReturn.Count == 0 ?
+                    NotFound("There no data in Collection that equals to: '" + term + "', on requested page = '" + pageModel.CurrentPage + "'.") :
+                    Ok(booksOnReturn);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
         #endregion
