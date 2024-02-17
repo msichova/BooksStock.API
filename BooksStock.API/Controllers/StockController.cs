@@ -382,6 +382,29 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        [HttpDelete, Route("book-delete")]
+        public async Task<ActionResult> RemoveBook([Required][StringLength(24)]string id)
+        {
+            try
+            {
+                var book = await _services.GetBookByIdAsync(id);
+                if(book is null)
+                {
+                    _logger.LogInformation(message: @"Book with Id: '{@id}' was not found in Collection, the deliting request was declined at {@DateTime}", id, DateTime.Now);
+                    return BadRequest("The data with id: '" + id + "', was not found in Collection");
+                }
+
+                await _services.DeleteAsync(id);
+                _logger.LogInformation(message: @"Book with Id: '{@id}' successfully deleted at {@DateTime}. Data Deleted: {@book}", id, DateTime.Now, book.ToJson());
+                return Ok("Successfully deleted data: " + book.ToJson());
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
         #region of Helpper methods
         private void MyLogErrors(Exception error)
