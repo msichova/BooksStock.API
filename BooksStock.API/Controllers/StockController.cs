@@ -73,6 +73,22 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        [HttpGet, Route("books-available")]
+        public async Task<ActionResult<BookProduct>> GetAllBooksByAvailability([Required]bool available)
+        {
+            try
+            {
+                var books = (await _services.GetAllBooksAsync()).Where(book => book.IsAvailable == available).ToList();
+                return books is null || books.Count == 0 ? 
+                    NotFound("There no data in Collection with requiested parameters") : Ok(books);
+            }
+            catch(Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
 
