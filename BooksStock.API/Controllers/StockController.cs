@@ -50,6 +50,29 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        [HttpGet, Route("books-on-page")]
+        public async Task<ActionResult<BookProduct>> GetPerPage([FromQuery]PageModel pageModel)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksAsync();
+                if(books is null || books.Count == 0)
+                {
+                    return NotFound("There no data found in Collection to display");
+                }
+                List<BookProduct> booksOnPage = ContentOnPage(books, pageModel);
+
+                return booksOnPage is null || booksOnPage.Count == 0 ? 
+                    NotFound("There no data found for this page: " + pageModel.CurrentPage) : 
+                    Ok(booksOnPage);
+            }
+            catch(Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
 
@@ -61,6 +84,28 @@ namespace BooksStock.API.Controllers
             _logger.LogError(message: error.Message, args: error.StackTrace);
         }
 
+        //returning content on particular page divided by particular quantity per page
+        //sorting returning List by default(if not specified) in ascending order by price
+        private List<BookProduct> ContentOnPage(List<BookProduct> allBooks, PageModel pageModel)
+        {
+            try
+            {
+                List<BookProduct> booksOnReturn = !pageModel.InAscendingOrder.HasValue ||
+                    pageModel.InAscendingOrder == true ?
+                    [.. allBooks.OrderBy(book => book.Price)] :
+                    [.. allBooks.OrderByDescending(book => book.Price)];
+
+                Query query = new(pageModel.CurrentPage, (pageModel.QuantityPerPage < Query.MinPerPage ? Query.MinPerPage : pageModel.QuantityPerPage), booksOnReturn.Count);
+
+                return booksOnReturn is null || booksOnReturn.Count == 0 ? 
+                    [] : [.. booksOnReturn.Skip(query.ToSkipQuantity).Take(query.QuantityPerPage)];
+            }
+            catch(Exception error )
+            {
+                MyLogErrors(error);
+                return [];
+            }
+        }
         #endregion
     }
 }
