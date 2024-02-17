@@ -294,7 +294,40 @@ namespace BooksStock.API.Controllers
         #endregion
 
         #endregion
+        #region of HttpMethods for manipulations with Collection
+        [HttpPost, Route("book-add")]
+        public async Task<ActionResult> PostBook([FromQuery]BookProduct book)
+        {
+            try
+            {
+                if(book.Genres is null || book.Genres.Length == 0)
+                {
+                    book!.Genres = ["unspecified"];
+                }
+                BookProduct newBook = new()
+                {
+                    Title = book.Title,
+                    Author = book.Author,
+                    Description = book.Description,
+                    Language = book.Language,
+                    Link = !string.IsNullOrEmpty(book.Link!.ToString()) && Uri.IsWellFormedUriString(book.Link.ToString(), UriKind.Absolute) ? book.Link : new Uri("about:blank"),
+                    Genres = [..book.Genres],
+                    IsAvailable = book.IsAvailable,
+                    Price = book.Price > 0 ? book.Price : 0
+                };
 
+                 await _services.AddNewAsync(newBook);
+
+                _logger.LogInformation(message: @"Post Book: {@newBook} at {@DateTime}", newBook, DateTime.Now);
+                return Ok("Successfully added: " + newBook.ToJson());
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+        #endregion
         #region of Helpper methods
         private void MyLogErrors(Exception error)
         {
