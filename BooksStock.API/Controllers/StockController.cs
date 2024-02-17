@@ -2,6 +2,7 @@
 using BooksStock.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 
@@ -320,6 +321,60 @@ namespace BooksStock.API.Controllers
 
                 _logger.LogInformation(message: @"Post Book: {@newBook} at {@DateTime}", newBook, DateTime.Now);
                 return Ok("Successfully added: " + newBook.ToJson());
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+
+        /*
+         * !ATTENTION! if new genre/genres was entered then the all existing genres 
+         * would be replaced with new entered list
+         * Required: Id, isAvailable another parameters could be not entered, 
+         * parameters that was not entered would be not changed
+         * If Id was not specified or incorrect - returns BadRequest(), 
+         * if Id is not found - returns NotFound() object result
+         * If isAvailable not specified - sets to false
+        */
+        [HttpPut, Route("book-update")]
+        public async Task<ActionResult> PutBook([FromQuery]BookProduct book)
+        {
+            try
+            {
+                if(string.IsNullOrEmpty(book.Id) || book.Id.Length != 24)
+                {
+                    _logger.LogInformation(message: @"The Id was not provided, the Update request was declined at {@DateTime}", DateTime.Now);
+                    return BadRequest("The Id should be valid Bson Id");
+                }
+                var bookOld = await _services.GetBookByIdAsync(book.Id);
+                if(bookOld is null)
+                {
+                    _logger.LogInformation(message: @"The Id: {@id} was not found, the Update request was declined at {@DateTime}", book.Id.ToJson(), DateTime.Now);
+                    return NotFound("Book with Id: '" + book.Id + "', was not found in collection, update request rejected");
+                }
+
+                //ATTENTION if new genre/genres was entered then the all existing genres would be replaced with new entered list
+                book.Genres ??= bookOld.Genres!.Length == 0 ? ["unspecified"] : [..bookOld.Genres];
+
+                BookProduct updatedBook = new()
+                { 
+                    Id = book.Id,
+                    Title = string.IsNullOrEmpty(book.Title) ? bookOld.Title : book.Title,
+                    Author = string.IsNullOrEmpty(book.Author) ? bookOld.Author : book.Author,
+                    Description = string.IsNullOrEmpty(book.Description) ? bookOld.Description : book.Description,
+                    Language = string.IsNullOrEmpty(book.Language) ? bookOld.Language : book.Language,
+                    IsAvailable = book.IsAvailable,
+                    Price = book.Price > 0 ? book.Price : bookOld.Price,
+                    Genres = book.Genres,
+                    Link = book.Link is not null && Uri.IsWellFormedUriString(book.Link.ToString(), UriKind.Absolute) ? book.Link : new Uri("about:blank")
+                };
+
+                await _services.UpdateNewAsync(updatedBook);
+                _logger.LogInformation(message: @"Put Book: {@updatedBook} at {@DateTime}", updatedBook, DateTime.Now);
+                return Ok("Successfully updated: " + updatedBook.ToJson());
+
             }
             catch (Exception error)
             {
