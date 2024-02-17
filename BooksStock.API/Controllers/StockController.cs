@@ -1,6 +1,7 @@
 ﻿using BooksStock.API.Models;
 using BooksStock.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 
@@ -228,6 +229,34 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        /* !ATTENTION! may be overflow error, or slowdown preformance. Depends on current size of database
+         * matching books in collection by entered filters, where athour equals author, title equals title and etc.
+         * if there was not entered any searching parameters returns all list of collection 
+         */
+        [HttpGet, Route("books-filtered")]
+        public async Task<ActionResult<List<BookProduct>>> GetAllUnderFilter([FromQuery]FilterForBook filter)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksAsync();
+
+                if(books is null || books.Count == 0)
+                {
+                    return NotFound("There no data in Collection");
+                }
+                List<BookProduct> booksMatches = ApplyFilters(books, filter);
+
+                return booksMatches is null || booksMatches.Count == 0 ?
+                    NotFound("There no data in Collection by requested filter: \n" + filter.ToJson()) :
+                    Ok(booksMatches);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
         #endregion
@@ -255,6 +284,56 @@ namespace BooksStock.API.Controllers
                     [] : [.. booksOnReturn.Skip(query.ToSkipQuantity).Take(query.QuantityPerPage)];
             }
             catch(Exception error )
+            {
+                MyLogErrors(error);
+                return [];
+            }
+        }
+
+        /*
+         * Method returning list of books where items contains all FilterForBook criterias
+        */
+        private List<BookProduct> ApplyFilters(List<BookProduct> allBooks, FilterForBook filter)
+        {
+            try
+            {
+                if(allBooks is not null || allBooks!.Count != 0)
+                {
+                    List<BookProduct> booksMatches = [.. allBooks];
+
+                    booksMatches = !string.IsNullOrEmpty(filter.Author) ?
+                        booksMatches.Where(book => book.Author!.Contains(filter.Author, StringComparison.OrdinalIgnoreCase)).ToList() : booksMatches;
+
+                    booksMatches = !string.IsNullOrEmpty(filter.Title) ?
+                        booksMatches.Where(book => book.Title!.Contains(filter.Title, StringComparison.OrdinalIgnoreCase)).ToList() : booksMatches;
+
+                    booksMatches = !string.IsNullOrEmpty(filter.Annotation) ?
+                        booksMatches.Where(book => book.Description!.Contains(filter.Annotation, StringComparison.OrdinalIgnoreCase)).ToList() : booksMatches;
+
+                    booksMatches = !string.IsNullOrEmpty(filter.Language) ?
+                        booksMatches.Where(book => book.Language!.Contains(filter.Language, StringComparison.OrdinalIgnoreCase)).ToList() : booksMatches;
+
+                    booksMatches = filter.Genres is not null?
+                        booksMatches.Where(book => book.Genres!.Any(genre => filter.Genres.Any(g => g.Contains(genre, StringComparison.OrdinalIgnoreCase)))).ToList() : 
+                        booksMatches;
+
+                    booksMatches = filter.IsAvailable.HasValue ?
+                        booksMatches.Where(book => book.IsAvailable == filter.IsAvailable).ToList() :
+                        booksMatches;
+
+                    booksMatches = filter.MinPrice.HasValue && filter.MaxPrice.HasValue ?
+                        booksMatches.Where(book => book.Price >= filter.MinPrice && book.Price <= filter.MaxPrice).ToList() :
+                        filter.MinPrice.HasValue && !filter.MaxPrice.HasValue ?
+                        booksMatches.Where(book => book.Price >= filter.MinPrice).ToList() :
+                        !filter.MinPrice.HasValue && filter.MaxPrice.HasValue ?
+                        booksMatches.Where(book => book.Price <= filter.MaxPrice).ToList() :
+                        booksMatches;
+
+                    return booksMatches;
+                }
+                return [];
+            }
+            catch (Exception error)
             {
                 MyLogErrors(error);
                 return [];
