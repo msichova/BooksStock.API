@@ -327,6 +327,23 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        //returning a number of all books under particular genre
+        [HttpGet, Route("books-genre-count")]
+        public async Task<ActionResult<int>> GetQuantityAtGenre([Required]string genre)
+        {
+            try
+            {
+                return (await _services.GetAllBooksAsync()).Any(book => book.Genres!.Contains(genre)) ?
+                    Ok((await _services.GetAllBooksAsync()).Where(book => book.Genres!.Contains(genre)).ToList().Count) :
+                    NotFound("The genre = '" + genre + "', was not found in Collection");
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
         #endregion
         #region of HttpMethods for manipulations with Collection
