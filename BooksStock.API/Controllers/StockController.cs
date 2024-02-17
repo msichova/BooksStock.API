@@ -294,6 +294,40 @@ namespace BooksStock.API.Controllers
         }
         #endregion
 
+        #region of Counting Methods
+        //returning a number of all books in collection
+        [HttpGet, Route("all-books-count")]
+        public async Task<ActionResult<int>> GetQuantityOfAllBooks()
+        {
+            try
+            {
+                int quantity = (await _services.GetAllBooksAsync()).Count;
+
+                return Ok(quantity);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+
+        //returning a number of all books in collection, where isAvailable parameter equals requested true or false
+        [HttpGet, Route("all-available-count")]
+        public async Task<ActionResult<int>> GetQuantityAvailable([Required]bool available)
+        {
+            try
+            {
+                int quantity = (await _services.GetAllBooksAsync()).Where(book => book.IsAvailable == available).ToList().Count;
+                return Ok(quantity);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+        #endregion
         #endregion
         #region of HttpMethods for manipulations with Collection
         [HttpPost, Route("book-add")]
