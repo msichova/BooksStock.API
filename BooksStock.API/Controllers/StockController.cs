@@ -144,6 +144,24 @@ namespace BooksStock.API.Controllers
         }
         #endregion
 
+        #region of Filtering methods
+        //returns list of ALL books where Title,Author, Language or one of item from array of Genres EQUALS to searchCondition
+        [HttpGet, Route("books-equals-condition")]
+        public async Task<ActionResult<List<BookProduct>>> GetAllBookEquals([Required]string term)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksEqualsConditionAsync(term);
+                return books is null || books.Count == 0 ?
+                    NotFound("There no data in Collection that equals to: '" + term + "'") : Ok(books);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+        #endregion
 
         #endregion
 
