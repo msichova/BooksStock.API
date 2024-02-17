@@ -1,6 +1,7 @@
 ﻿using BooksStock.API.Models;
 using BooksStock.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 
 namespace BooksStock.API.Controllers
@@ -29,6 +30,21 @@ namespace BooksStock.API.Controllers
                     NotFound("There no data found in Collection to display") : Ok(books);
             }
             catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
+
+        [HttpGet, Route("book-id")]
+        public async Task<ActionResult<BookProduct>> GetBookWithId([Required][StringLength(24)]string id)
+        {
+            try
+            {
+                var book = await _services.GetBookByIdAsync(id);
+                return book is null ? NotFound("There no product with id: '" + id + "'") : Ok(book);
+            }
+            catch(Exception error)
             {
                 MyLogErrors(error);
                 return Problem(error.Message.ToString());
