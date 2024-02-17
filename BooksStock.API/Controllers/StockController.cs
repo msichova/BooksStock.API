@@ -112,6 +112,36 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        //returns list of all genres in collection
+        [HttpGet, Route("genres")]
+        public async Task<ActionResult<string>> GetAllGenres()
+        {
+            try
+            {
+                var books = await _services.GetAllBooksAsync();
+
+                if(books is not null)
+                {
+                    List<string> genres = [];
+                    foreach(var book in books)
+                    {
+                        if(book.Genres!.Length != 0)
+                        {
+                            genres.AddRange(book.Genres.ToArray().Where(genre => !genres.Contains(genre)).ToList());
+                        }
+                    }
+                    return genres is null || genres.Count == 0 ?
+                        NotFound("There no data in Collection") : Ok(genres);
+                }
+                return NotFound("There no data in Collection");
+            }
+            catch(Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
 
