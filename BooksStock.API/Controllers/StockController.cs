@@ -257,6 +257,40 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        /* !ATTENTION! may be overflow error, or slowdown preformance. Depends on current size of database
+         * matching books, AT the REQUESTED Page, in collection by entered filters, where athour equals author, 
+         * title equalstitle and etc.
+         * if there was not entered any searching parameters returns all list of collection 
+        */
+        [HttpGet, Route("books-filtered-page")]
+        public async Task<ActionResult<List<BookProduct>>> GetPerPageUnderFilter([FromQuery] FilterForBook filter, [FromQuery]PageModel pageModel)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksAsync();
+
+                if (books is null || books.Count == 0)
+                {
+                    return NotFound("There no data in Collection");
+                }
+                List<BookProduct> booksMatches = ApplyFilters(books, filter);
+                if(booksMatches is null || booksMatches.Count == 0)
+                {
+                    NotFound("There no data in Collection by requested filter: \n" + filter.ToJson());
+                }
+                booksMatches = ContentOnPage(booksMatches!, pageModel);
+
+                return booksMatches is null || booksMatches.Count == 0 ?
+                    NotFound("There no data in Collection that contains:\n'" + filter.ToJson() + "',\non requested page = '" + pageModel.CurrentPage + "'.") :
+                    Ok(booksMatches);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
         #endregion
