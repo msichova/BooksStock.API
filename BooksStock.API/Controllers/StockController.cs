@@ -186,6 +186,23 @@ namespace BooksStock.API.Controllers
                 return Problem(error.Message.ToString());
             }
         }
+
+        //returns list of ALL books where Title,Author, Language or one of item from array of Genres CONTAINS to searchCondition
+        [HttpGet, Route("books-contains-condition")]
+        public async Task<ActionResult<List<BookProduct>>> GetAllBookContains([Required] string term)
+        {
+            try
+            {
+                var books = await _services.GetAllBooksContainsConditionAsync(term);
+                return books is null || books.Count == 0 ?
+                    NotFound("There no data in Collection that contains: '" + term + "'") : Ok(books);
+            }
+            catch (Exception error)
+            {
+                MyLogErrors(error);
+                return Problem(error.Message.ToString());
+            }
+        }
         #endregion
 
         #endregion
