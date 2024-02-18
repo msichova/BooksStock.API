@@ -132,13 +132,32 @@ namespace BooksStock.API.Services
         //if there nor databases with serial numbers, then just returns 1
         private int GetDatabaseSerialNumber(string databaseName)
         {
-            return string.IsNullOrEmpty(databaseName) ? 1 : int.Parse(databaseName!.Split('_').ElementAt(4)) + 1;
+            //return string.IsNullOrEmpty(databaseName) ? 1 : int.Parse(databaseName!.Split('_').ElementAt(4)) + 1;
+            int number = 1;
+            if (string.IsNullOrEmpty(databaseName))
+            {
+                return number;
+            }
+            if (databaseName.Contains("PM") || databaseName.Contains("AM"))
+            {
+                number = int.Parse(databaseName!.Split('_').ElementAt(4)) + 1;
+            }
+            else
+            {
+                number = int.Parse(databaseName!.Split('_').ElementAt(3)) + 1;
+            }
+            return number;
         }
 
         //return current date and time to add it to new name of database
         private string GetDateTimeNow()
         {
-            return DateTime.Now.ToString().Replace('/', '-').Replace(':', '-').Replace(' ', '_');
+            //return DateTime.Now.ToString().Replace('/', '-').Replace(':', '-').Replace(' ', '_');
+            string dateTime = DateTime.Now.ToString().Replace(' ', '_');
+            dateTime = dateTime.Replace('/', '-');
+            dateTime = dateTime.Replace(':', '-');
+            dateTime = dateTime.Replace('.', '-');
+            return dateTime;
         }
         #endregion
     }
