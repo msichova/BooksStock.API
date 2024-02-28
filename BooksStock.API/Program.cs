@@ -3,12 +3,17 @@ using BooksStock.API.Services;
 using Serilog;
 using Asp.Versioning;
 using BooksStock.API.Services.ApiKey;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<StockDatabseSettings>(builder.Configuration.GetSection("ConnectionToMongoDB"));
 builder.Services.AddSingleton<StockServices>();
+
+//Adding services for Api Middleware
+builder.Services.AddTransient<IApiKeyValidator, ApiKeyValidator>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddCors(options =>
 {
@@ -49,7 +54,33 @@ builder.Services
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    //adding api key scheme
+    options.AddSecurityDefinition(ApiConstants.ApiKeyName, new OpenApiSecurityScheme()
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter API Key",
+        Name = ApiConstants.ApiKeyHeader,
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    //adding api key into global security requirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = ApiConstants.ApiKeyName
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 //Add support to logging with SERILOG
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
@@ -66,6 +97,8 @@ else
 {
     app.UseHsts();
 }
+
+app.UseMiddleware<ApiMiddleware>();
 
 app.UseSerilogRequestLogging();
 
