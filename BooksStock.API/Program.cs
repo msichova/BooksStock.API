@@ -2,6 +2,7 @@ using BooksStock.API.Models;
 using BooksStock.API.Services;
 using Serilog;
 using Asp.Versioning;
+using BooksStock.API.Services.ApiKey;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("MyPolicyForAdmin", policy =>
     {
         policy.WithOrigins("");
-        policy.WithHeaders(["ApiVersion-BooksStore : 1"]);
+        policy.WithHeaders([ApiConstants.ApiVersionHeader + " : 1"]);
         policy.SetIsOriginAllowed(origin => false);
         policy.AllowAnyMethod();
         policy.DisallowCredentials();
@@ -24,7 +25,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("MyPolicyForUsers", policy =>
     {
         policy.WithOrigins("");
-        policy.WithHeaders(["ApiVersion-BooksStore : 2"]);
+        policy.WithHeaders([ApiConstants.ApiVersionHeader + " : 2"]);
         policy.SetIsOriginAllowed(isOriginAllowed => false);
         policy.WithMethods("HttpGet");
         policy.DisallowCredentials();
@@ -37,7 +38,7 @@ builder.Services
     {
         options.ReportApiVersions = true;
         options.AssumeDefaultVersionWhenUnspecified = false;
-        options.ApiVersionReader = new HeaderApiVersionReader("ApiVersion-BooksStore");
+        options.ApiVersionReader = new HeaderApiVersionReader(ApiConstants.ApiVersionHeader);
     })
     .AddApiExplorer(options =>
     {
