@@ -1,6 +1,9 @@
 ﻿using Asp.Versioning;
 using BooksStock.API.Models;
 using BooksStock.API.Services;
+using BooksStock.API.Services.ApiKey;
+using BooksStock.API.Services.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -13,6 +16,7 @@ namespace BooksStock.API.Controllers
      * Version for Admin to retrive all data and manipulates with data
      * Supports all methods: HttpGet, HttpPost, HttpPut and HttpDelete
      */
+    [Authorize(Roles = ApiRolesConstants.Admin)]
     [ApiVersion("1.0")]
     [ApiController]
     [Produces("application/json")]
