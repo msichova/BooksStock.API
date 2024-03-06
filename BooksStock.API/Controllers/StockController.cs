@@ -1,14 +1,12 @@
 ﻿using Asp.Versioning;
 using BooksStock.API.Models;
 using BooksStock.API.Services;
-using BooksStock.API.Services.ApiKey;
 using BooksStock.API.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 
 namespace BooksStock.API.Controllers
 {
@@ -21,6 +19,7 @@ namespace BooksStock.API.Controllers
     [ApiController]
     [Produces("application/json")]
     [Consumes("application/json")]
+    [EnableCors("MyPolicyForAdmin")]
     public class StockV1Controller(StockServices services, ILogger<StockV1Controller> logger) : ControllerBase
     {
         private readonly StockServices _services = services;
@@ -555,6 +554,7 @@ namespace BooksStock.API.Controllers
     [ApiController]
     [Consumes("application/json")]
     [Produces("application/json")]
+    [EnableCors("MyPolicyForUsers")]
     public class StockV2Controller(StockServices services, ILogger<StockV2Controller> logger) : ControllerBase
     {
         private readonly StockServices _services = services;
