@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using BooksStock.API.Models.Authentication;
 using BooksStock.API.Services.Authentication;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,7 @@ namespace BooksStock.API.Controllers
     [ApiVersion("1")]
     [ApiController]
     [Route("authorization/")]
+    [EnableCors("MyPolicyForAdmin")]
     public class AuthenticationController(UserManager<ApiUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, ILogger<AuthenticationController> logger) : ControllerBase
     {
         private readonly UserManager<ApiUser> _userManager = userManager;
