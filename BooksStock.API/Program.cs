@@ -25,22 +25,22 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyPolicyForAdmin", policy =>
     {
-        policy.WithOrigins("");
-        policy.WithHeaders([ApiConstants.ApiVersionHeader + " : 1"]);
-        policy.SetIsOriginAllowed(origin => false);
-        policy.AllowAnyMethod();
-        policy.DisallowCredentials();
-        policy.SetPreflightMaxAge(TimeSpan.FromSeconds(30));
+        policy.WithOrigins("https://localhost:7053", "http://localhost:5259", "http://localhost:5000", "https://localhost:5000")
+        .WithHeaders([ApiConstants.ApiVersionHeader + " : 1"])
+        .SetIsOriginAllowed(origin => true)
+        .AllowAnyMethod()
+        .DisallowCredentials()
+        .SetPreflightMaxAge(TimeSpan.FromSeconds(30));
     });
 
     options.AddPolicy("MyPolicyForUsers", policy =>
     {
-        policy.WithOrigins("");
-        policy.WithHeaders([ApiConstants.ApiVersionHeader + " : 2"]);
-        policy.SetIsOriginAllowed(isOriginAllowed => false);
-        policy.WithMethods("HttpGet");
-        policy.DisallowCredentials();
-        policy.SetPreflightMaxAge(TimeSpan.FromSeconds(30));
+        policy.WithOrigins("https://localhost:7053", "http://localhost:5259", "http://localhost:5000", "https://localhost:5000")
+        .WithHeaders([ApiConstants.ApiVersionHeader + " : 2"])
+        .SetIsOriginAllowed(isOriginAllowed => true)
+        .WithMethods("HttpGet")
+        .DisallowCredentials()
+        .SetPreflightMaxAge(TimeSpan.FromSeconds(30));
     });
 });
 
@@ -155,16 +155,9 @@ builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Confi
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseHsts();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseHsts();
 
 app.UseMiddleware<ApiMiddleware>();
 
