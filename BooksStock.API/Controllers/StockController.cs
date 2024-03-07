@@ -19,7 +19,7 @@ namespace BooksStock.API.Controllers
     [ApiController]
     [Produces("application/json")]
     [Consumes("application/json")]
-    [EnableCors("MyPolicyForAdmin")]
+    [EnableCors(policyName: "MyPolicyForAdmin")]
     public class StockV1Controller(StockServices services, ILogger<StockV1Controller> logger) : ControllerBase
     {
         private readonly StockServices _services = services;
@@ -554,7 +554,7 @@ namespace BooksStock.API.Controllers
     [ApiController]
     [Consumes("application/json")]
     [Produces("application/json")]
-    [EnableCors("MyPolicyForUsers")]
+    [EnableCors(policyName: "MyPolicyForUsers")]
     public class StockV2Controller(StockServices services, ILogger<StockV2Controller> logger) : ControllerBase
     {
         private readonly StockServices _services = services;
