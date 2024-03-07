@@ -25,7 +25,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyPolicyForAdmin", policy =>
     {
-        policy.WithOrigins("https://localhost:7053", "http://localhost:5259", "http://localhost:5000", "https://localhost:5000")
+        policy.WithOrigins("http://localhost:5001", "https://localhost:5002")
         .WithHeaders([ApiConstants.ApiVersionHeader + " : 1"])
         .SetIsOriginAllowed(origin => true)
         .AllowAnyMethod()
@@ -35,7 +35,7 @@ builder.Services.AddCors(options =>
 
     options.AddPolicy("MyPolicyForUsers", policy =>
     {
-        policy.WithOrigins("https://localhost:7053", "http://localhost:5259", "http://localhost:5000", "https://localhost:5000")
+        policy.WithOrigins("http://localhost:5001", "https://localhost:5002")
         .WithHeaders([ApiConstants.ApiVersionHeader + " : 2"])
         .SetIsOriginAllowed(isOriginAllowed => true)
         .WithMethods("HttpGet")
@@ -159,7 +159,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHsts();
 
-app.UseMiddleware<ApiMiddleware>();
+app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging();
 
@@ -167,8 +167,10 @@ app.UseHttpsRedirection();
 
 app.UseCors();
 
+app.UseAuthentication();
 app.UseAuthorization();
-app.UseAuthorization();
+
+app.UseMiddleware<ApiMiddleware>();
 
 app.MapControllers();
 
